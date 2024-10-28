@@ -1,0 +1,10 @@
+{
+    "position": 1,
+    "label": "Ninite",
+    "collapsible": true,
+    "collapsed": true,
+    "className": "green",
+    "link": {
+      "type": "generated-index"
+    }
+  }

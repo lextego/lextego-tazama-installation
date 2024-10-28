@@ -1,0 +1,306 @@
+---  
+sidebar_position: 1  
+sidebar_label: Tazama Docker Deployment 3
+id: tazama-docker-deployment-3
+title: Full Stack Tazama Docker Deployment Part 3
+date: 2024-09-09 09:36:04
+author: Rob Reeve
+description: How to deploy a full stack Tazama instance
+tags: 
+  - WIP
+  - HowTo
+  - Docker
+  - Tazama
+  - Deployment
+---  
+
+<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Private Rule Processors
+
+Now for the final deployment step.
+
+## Background
+
+Individual rule processors are wrapped in a rule executer shell that handles common functions for all rule processors in a common way. While this makes rule processors easier to maintain by abstracting common code into the rule executer and leaving unique code in the rule processor, it does make the deployment process a little more complicated and onerous. In a production setting we would automate the deployment of the rule processors via Helm charts, but for our Docker Compose deployment, the process is a little more manual.
+
+Each rule processor must be wrapped in its own rule-executer. The rule executer source code is centralized in the public `rule-executer` repository, and each rule processor's unique source code is hosted in its own private repository.
+
+## Clone the Rule Executer Repository
+
+First, we have to clone the rule-executer itself. From your source code folder, in a Command Prompt, execute:
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ~/code/tazama
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama\
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple:
+    </TabItem>
+</Tabs>
+
+If you completed the docker health step, you do not need to clone again
+
+```bash
+git clone https://github.com/tazama-lf/rule-executer -b main
+```
+
+you should see the following
+
+```bash
+Cloning into 'rule-executer'...
+remote: Enumerating objects: 1262, done.
+remote: Counting objects: 100% (335/335), done.
+remote: Compressing objects: 100% (206/206), done.
+remote: Total 1262 (delta 208), reused 150 (delta 128), pack-reused 927 (from 1)
+Receiving objects: 100% (1262/1262), 985.60 KiB | 22.40 MiB/s, done.
+Resolving deltas: 100% (687/687), done.
+```
+
+By default, the rule executer is configured to build rule 901, the public sample rule processor, but we want it to build each private rule processor instead.
+
+First we need to prepare the rule-executer with the following updates
+
+### Update the .npmrc file
+
+**NOTE: Only perform this step if you do not have a `GH_TOKEN` environment variable in Windows**
+
+Navigate to the rule-executer folder and edit .npmrc from there.
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+      ```bash
+      cd ~/code/tazama/rule-executer
+      nano .npmrc
+      ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama\rule-executer
+        code .
+        ```
+        Edit the file from VS Code
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple:
+    </TabItem>
+</Tabs>
+
+If your GitHub Personal Access Token had not been added as an Environment Variable, you would need to specify the token in the `.npmrc` file. If you had specified the GH_TOKEN as an environment variable, you can leave the `${GH_TOKEN}` shell variable in place to retrieve it automatically.
+
+To update the `GH_TOKEN`: in VS Code, open the `.npmrc` file in the rule-executer root folder and replace the `${GH_TOKEN}` string with your GitHub Personal Access Token.
+
+### Delete the package-lock.json file
+
+While in the `rule-executer` root folder, delete the `package-lock.json` file from the `rule-executer` root folder:
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ~/code/tazama/rule-executer
+        rm package-lock.json
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```bash
+        cd \_GitHub\tazama\rule-executer
+        del package-lock.json
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+## Set Up the Rule Executer for a Specific Rule
+
+Once the rule executer is updated, we can create a rule executer for each of the rule processors. We'll first walk through the process to prepare the rule-executer to deploy a single processor, such as Rule 001, but then we'll show you how you can use a batch file or script to automate the whole process instead of deploying each rule processor one at a time.
+
+To skip ahead to the batch process, click: [batch process alternative](04_tazama.mdx)
+
+### Copy the rule-executer folder
+
+Navigate one folder up to your source code folder and copy the entire `rule-executer` folder to a new folder called `rule-executer-001`:
+
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ..
+        cp -r rule-executer rule-executer-001
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        cd ..
+        xcopy rule-executer rule-executer-001 /E /I /H
+    </TabItem>
+    <TabItem value="mac">
+        cd ..
+        cp -r rule-executer rule-executer-001
+    </TabItem>
+</Tabs>
+
+You should now have a new directory call ```rule-executer-001```
+
+### Update the package.json file
+
+Navigate to the new `rule-executer-001` folder and start Nano or VS Code from there.
+
+In VS Code, open the `package.json` file and update the `dependencies.rule` value from `"npm:@frmscoe/rule-901@latest"` to `"npm:@frmscoe/rule-001@latest"`.
+
+We replace
+
+```json
+    "rule": "npm:@frmscoe/rule-901@2.0.0",
+```
+
+with
+
+```json
+    "rule": "npm:@frmscoe/rule-001@latest",
+```
+
+### Update the Dockerfile
+
+Now we modify the `Dockerfile` file and update the `RULE_NAME` environment variable value from `"901"` to `"001"`.
+
+### Install software dependencies
+
+You can now execute the following command to install all the software dependencies for the processor:
+
+```bash
+nvm use 20
+npm install
+```
+
+You should see the following output
+
+```bash
+npm install
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @humanwhocodes/config-array@0.11.14: Use @eslint/config-array instead
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+
+> rule-executer@1.2.0 prepare
+> husky
+
+
+added 729 packages, and audited 730 packages in 18s
+
+180 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+```
+
+### Deploy the processor
+
+And, finally, we can deploy the processor into Docker! Navigate back to the `Full-Stack-Docker-Tazama` folder, and run the command:
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```
+        cd ~/code/tazama/Full-Stack-Docker-Tazama/
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama\Full-Stack-Docker-Tazama\
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+```
+docker compose up -d rule-001
+```
+
+You should see the following
+
+```bash
+docker compose up -d rule-001
+[+] Building 8.4s (25/25) FINISHED                                                                           docker:default
+ => [rule-001 internal] load build definition from Dockerfile                                                          0.0s
+ => => transferring dockerfile: 2.64kB                                                                                 0.0s
+ => [rule-001 internal] load metadata for gcr.io/distroless/nodejs20-debian11:nonroot                                  0.5s
+ => [rule-001 internal] load metadata for docker.io/library/node:20-bullseye                                           0.7s
+ => [rule-001 internal] load .dockerignore                                                                             0.0s
+ => => transferring context: 129B                                                                                      0.0s
+ => [rule-001 internal] load build context                                                                             0.2s
+ => => transferring context: 373.15kB                                                                                  0.1s
+ => [rule-001 run-env 1/7] FROM gcr.io/distroless/nodejs20-debian11:nonroot@sha256:81c69eccf1cbe5420614b6a93f101c5989  0.0s
+ => CACHED [rule-001 builder 1/8] FROM docker.io/library/node:20-bullseye@sha256:d7c934f7d5681f3da7236d53275d1853972d  0.0s
+ => CACHED [rule-001 builder 2/8] WORKDIR /home/app                                                                    0.0s
+ => [rule-001 builder 3/8] COPY ./src ./src                                                                            0.1s
+ => [rule-001 dep-resolver 2/4] COPY package*.json ./                                                                  0.1s
+ => [rule-001 dep-resolver 3/4] COPY .npmrc ./                                                                         0.1s
+ => [rule-001 builder 4/8] COPY ./package*.json ./                                                                     0.1s
+ => [rule-001 dep-resolver 4/4] RUN npm ci --omit=dev --ignore-scripts                                                 2.7s
+ => [rule-001 builder 5/8] COPY ./tsconfig.json ./                                                                     0.1s
+ => [rule-001 builder 6/8] COPY .npmrc ./                                                                              0.1s
+ => [rule-001 builder 7/8] RUN npm ci --ignore-scripts                                                                 4.8s
+ => CACHED [rule-001 run-env 2/7] WORKDIR /home/app                                                                    0.0s
+ => [rule-001 run-env 3/7] COPY --from=dep-resolver /node_modules ./node_modules                                       0.6s
+ => [rule-001 builder 8/8] RUN npm run build                                                                           1.4s
+ => [rule-001 run-env 4/7] COPY --from=builder /home/app/build ./build                                                 0.1s
+ => [rule-001 run-env 5/7] COPY package.json ./                                                                        0.0s
+ => [rule-001 run-env 6/7] COPY deployment.yaml ./                                                                     0.0s
+ => [rule-001 run-env 7/7] COPY service.yaml ./                                                                        0.1s
+ => [rule-001] exporting to image                                                                                      0.5s
+ => => exporting layers                                                                                                0.5s
+ => => writing image sha256:af9d5b7a81252c4d6c23da128efaf22e35e4425efcbb966f698a3953d4cf7880                           0.0s
+ => => naming to docker.io/library/full-stack-docker-tazama-rule-001                                                   0.0s
+ => [rule-001] resolving provenance for metadata file                                                                  0.0s
+[+] Running 3/3
+ ✔ Container full-stack-docker-tazama-redis-1     Started                                                              0.3s
+ ✔ Container full-stack-docker-tazama-arango-1    Started                                                              0.3s
+ ✔ Container full-stack-docker-tazama-rule-001-1  Started                                                              0.4s
+```
+
+### Repeat steps for the other rule processors as well
+
+The Specific Rule steps above must be performed for each private rule processor to deploy them all.

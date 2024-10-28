@@ -1,0 +1,278 @@
+---  
+sidebar_position: 1  
+sidebar_label: Tazama Docker Deployment 2
+id: tazama-docker-deployment-2
+title: Full Stack Tazama Docker Deployment Part 2
+date: 2024-09-09 09:36:04
+author: Rob Reeve
+description: How to deploy a full stack Tazama instance
+tags: 
+  - WIP
+  - HowTo
+  - Docker
+  - Tazama
+  - Deployment
+---  
+
+<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Configure Tazama
+
+Tazama is configured by loading the network map, rules and typology configurations required to evaluate a transaction via the ArangoDB API. As with the rules themselves, the configuration information is hidden in a private repository. If you are a member of the Tazama Organization on GitHub, you'll be able to clone this repository onto your local machine with the following command:
+
+Change the current folder back to your root source code folder:
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ~/code/tazama
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+We will now be using the private repos, so we will need to enter our credentials. As we have a GitHub Token, we will be using the GH_TOKEN value as our Password. You will need to have this available. (remember it was saved in the environment variables earlier)
+
+Clone the `tms-configuration` repository:
+
+```bash
+git clone https://github.com/frmscoe/tms-configuration -b main
+```
+
+In addition to cloning the configuration repository, we also need to clone the Tazama `Postman` repository so that we can utilize the Postman environment file that is hosted there:
+
+```bash
+git clone https://github.com/tazama-lf/postman -b main
+```
+
+```bash
+Cloning into 'tms-configuration'...
+remote: Enumerating objects: 150, done.
+remote: Counting objects: 100% (60/60), done.
+remote: Compressing objects: 100% (42/42), done.
+remote: Total 150 (delta 26), reused 30 (delta 15), pack-reused 90 (from 1)
+Receiving objects: 100% (150/150), 202.45 KiB | 10.12 MiB/s, done.
+Resolving deltas: 100% (58/58), done.
+
+Cloning into 'postman'...
+remote: Enumerating objects: 1978, done.
+remote: Counting objects: 100% (948/948), done.
+remote: Compressing objects: 100% (244/244), done.
+remote: Total 1978 (delta 866), reused 706 (delta 704), pack-reused 1030 (from 1)
+Receiving objects: 100% (1978/1978), 1.85 MiB | 11.44 MiB/s, done.
+Resolving deltas: 100% (1239/1239), done.
+```
+
+Now that these two repositories are cloned, we can perform the following Newman command to load the configuration into the ArangoDB databases and collections:
+
+```bash
+newman run collection-file -e environment-file --timeout-request 10200
+```
+
+ - The `collection-file` is the full path to the location on your local machine where the `tms-configuration\default\tms-config.postman_collection.json` file is located.
+ - The `environment-file` is the full path to the location on your local machine where the `postman\environments\Tazama-Docker-Compose-LOCAL.postman_environment.json` file is located.
+ - If the path contains spaces, wrap the string in double-quotes.
+
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        newman run ~/code/tazama/tms-configuration/default/tms-config.postman_collection.json -e ~/code/tazama/postman/environments/Tazama-Docker-Compose-LOCAL.postman_environment.json --timeout-request 10200
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        In a powershell as administrator run newman
+
+        ```powershell
+        newman run \_GitHub\tazama\tms-configuration\default\tms-config.postman_collection.json -e \_GitHub\tazama\postman\environments\Tazama-Docker-Compose-LOCAL.postman_environment.json --timeout-request 10200
+        cd \_GitHub\tazama
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+you should get the following
+
+```bash
+tms-config
+
+→ Get Arango Token
+  POST localhost:18529/_open/auth [404 Not Found, 558B, 25ms]
+
+→ Remove all rule configurations
+  POST localhost:18529/_db/configuration/_api/cursor [201 Created, 825B, 3ms]
+  ✓  Query successful
+
+→ Remove all typology configurations
+  POST localhost:18529/_db/configuration/_api/cursor [201 Created, 826B, 2ms]
+  ✓  Query successful
+
+→ Deactivate Active Network Maps
+  POST localhost:18529/_db/configuration/_api/cursor [201 Created, 835B, 2ms]
+  ┌
+  │ 'Deactivating network map _ids: 170'
+  └
+  POST localhost:18529/_db/configuration/_api/cursor [201 Created, 826B, 2ms]
+  ┌
+  │ {
+  │   result: [],
+  │   hasMore: false,
+  │   cached: false,
+  │   extra: {
+  │     warnings: [],
+  │     stats: {
+  │       writesExecuted: 1,
+  │       writesIgnored: 0,
+  │       scannedFull: 0,
+  │       scannedIndex: 0,
+  │       cursorsCreated: 0,
+  │       cursorsRearmed: 0,
+  │       cacheHits: 0,
+  │       cacheMisses: 0,
+  │       filtered: 0,
+  │       httpRequests: 0,
+  │       executionTime: 0.00014340699999593198,
+  │       peakMemoryUsage: 0,
+  │       intermediateCommits: 0
+  │     }
+  │   },
+  │   error: false,
+  │   code: 201
+  │ }
+  └
+  ✓  Network map deactivation successful
+
+→ Rule 078 - pain.001/013 disabled
+  POST localhost:18529/_db/configuration/_api/document/ruleConfiguration [202 Accepted, 564B, 2ms]
+  ✓  Update successful
+
+→ Insert rule configurations
+  POST localhost:18529/_db/configuration/_api/document/ruleConfiguration [202 Accepted, 3.55kB, 3ms]
+  ✓  Update successful
+
+→ Insert typology configurations
+  POST localhost:18529/_db/configuration/_api/document/typologyConfiguration [202 Accepted, 3.02kB, 3ms]
+  ✓  Update successful
+
+→ Insert routing configuration
+  POST localhost:18529/_db/configuration/_api/document/networkConfiguration [202 Accepted, 545B, 2ms]
+  ✓  Update successful
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │               9 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │               8 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │               7 │               0 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 233ms                                   │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 7.25kB (approx)                        │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 4ms [min: 2ms, max: 25ms, s.d.: 7ms] │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Deploy core processors
+
+Now that the system is configured, we can deploy our core processors. The main reason the configuration needs to preceed the deployment of the processors is that the processors read the network map at startup to set up the NATS pub/sub routes for the evaluation flow. If the core processors were deployed first, they would have to be restarted once the configuration was eventually uploaded.
+
+:::warning
+
+Although the system will deploy the docker containers, the reality is that they currently report as unhealthy - you can actually ignore the warning, if the ```docker ps``` or container views report as unhealthy.
+
+However we also have instructions to prevent this in the [Unhealthy Docker Containers](02_01_faulty_tms.md) documentation. If you already made the changes, you can also proceed
+
+:::
+
+Navigate back to the `full-stack-docker-tazama` folder and execute the docker command
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ~/code/tazama/Full-Stack-Docker-Tazama
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```powershell
+        cd \_GitHub\tazama\Full-Stack-Docker-Tazama
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+Execute the following command to deploy the core processors:
+
+```bash
+docker compose up -d tms ed tp tadp
+```
+
+You should see the following when it has completed (there is too much to display otherwise)
+
+```bash
+ ✔ Container full-stack-docker-tazama-nats-1    Running    0.0s
+ ✔ Container full-stack-docker-tazama-redis-1   Running    0.0s
+ ✔ Container full-stack-docker-tazama-arango-1  Running    0.0s
+ ✔ Container full-stack-docker-tazama-tadp-1    Started    0.3s
+ ✔ Container full-stack-docker-tazama-tp-1      Started    0.3s
+ ✔ Container full-stack-docker-tazama-tms-1     Started    0.3s
+ ✔ Container full-stack-docker-tazama-ed-1      Started    0.3s
+```
+
+This command will install:
+
+- The Transaction Monitoring Service API at [https://localhost:5000](https://localhost:5000), where messages will be sent for evaluation
+- The Event Director that will handle message routing based on the network map
+- The Typology Processor that will summarize rule results into scenarios according to individual typology configurations
+- The Transaction Aggregation and Decisioning Processor that will wrap up the evaluation of a transaction and publish any alerts for breached typologies
+
+You can test that the TMS API was successfully deployed with the following command from the Command Prompt:
+
+```
+curl localhost:5000
+```
+
+you should get the following response
+
+```bash
+curl localhost:5000
+{"status":"UP"}
+```

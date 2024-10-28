@@ -1,0 +1,113 @@
+---  
+sidebar_position: 1  
+sidebar_label: Tazama Docker UI Deployment
+id: tazama-docker-deployment-ui
+title: Full Stack Tazama Docker Deployment Part 5 - UI Deployment
+date: 2024-09-09 09:36:04
+author: Rob Reeve
+description: How to deploy a full stack Tazama instance including the demo UI
+tags: 
+  - WIP
+  - HowTo
+  - Docker
+  - Tazama
+  - Deployment
+---  
+
+<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+We need to update our docker-compose.yaml
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+  <TabItem value="ubuntu">
+    ```bash
+    cd ~/code/tazama/Full-Stack-Docker-Tazama
+    nano docker-compose.yaml
+    ```
+  </TabItem>
+  <TabItem value="windows">
+
+  </TabItem>
+  <TabItem value="mac">
+
+  </TabItem>
+</Tabs>
+
+Add this to your docker-compose.yaml:
+
+```yaml
+# Demo UI
+demoUI:
+    image: ruhfuskdev/tazama-demo:v1.0.15
+    env_file:
+      - path: ./env/demo.env
+        required: true
+    restart: always
+    depends_on:
+      - tms
+      - arango
+      - nats
+    ports:
+      - '3001:3001'
+```
+
+We now need to create a ``demo.env`` file in the ```full-stack-docker-tazama/env``` folder with the contents:
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+  <TabItem value="ubuntu">
+    ```bash
+    cd ~/code/tazama/Full-Stack-Docker-Tazama/env
+    touch demo.env
+    nano demo.env
+    ```
+  </TabItem>
+  <TabItem value="windows">
+
+  </TabItem>
+  <TabItem value="mac">
+
+  </TabItem>
+</Tabs>
+
+
+
+```bash
+# SPDX-License-Identifier: Apache-2.0
+
+NODE_ENV=dev
+NEXT_PUBLIC_URL="http://localhost:3001"
+PORT="3001"
+NEXT_PUBLIC_TMS_SERVER_URL="http://localhost:5000"
+NEXT_PUBLIC_TMS_KEY=""
+NEXT_PUBLIC_CMS_NATS_HOSTING="nats://nats:4222"
+NEXT_PUBLIC_NATS_USERNAME=""
+NEXT_PUBLIC_NATS_PASSWORD=""
+NEXT_PUBLIC_ARANGO_DB_HOSTING="http://localhost:18529"
+NEXT_PUBLIC_DB_USER="root"
+NEXT_PUBLIC_DB_PASSWORD=""
+NEXT_PUBLIC_WS_URL="http://localhost:3001"
+
+NEXT_PUBLIC_NATS_SUBSCRIPTIONS="['connection', '>', 'typology-999@1.0.0']"
+```
+
+Replace the localhost with the IP address of your server.
+
+```bash
+docker compose up -d demoUI
+```
+
+the service should now be up and running [here](http://192.168.50.26:3001/)

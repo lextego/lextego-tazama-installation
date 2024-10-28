@@ -1,0 +1,10 @@
+{
+  "position": 1,
+  "label": "Developer Guides",
+  "collapsible": true,
+  "collapsed": false,
+  "className": "blue",
+  "link": {
+    "type": "generated-index"
+  }
+}

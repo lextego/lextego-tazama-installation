@@ -1,0 +1,139 @@
+---  
+sidebar_position: 1  
+sidebar_label: GitHub Access Token
+id: gitHub_personal_access_token
+title: GitHub Personal Access Token
+date: 2024-09-09 14:36:39
+author: Rob Reeve
+description: Setup GitHub Personal Access Token
+tags: 
+  - WIP
+  - GitHub
+  - WSL
+  - Ubuntu
+---  
+
+<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+This is taken from the [following](https://www.howtogeek.com/devops/how-to-set-up-https-personal-access-tokens-for-github-authentication/)
+
+## What Are Personal Access Tokens?
+
+Github still chooses to recommend easier-to-use HTTPS endpoints for accessing repos, but their password based security is a major downside. This is why, if you've tried to push or pull code using your account password recently, you may have received the following error:
+
+```bash
+remote: Support for password authentication was removed on August 13, 2021. Please use a personal access token instead.
+```
+
+Git's command line is a bit misleading here, because it does ask for your "password" but Git wants you to use something called a Personal Access Token (PAT). This works a lot like a secondary password, except it's unique, more secure, and can be given more specific permissions that let you grant access to your account safely.
+
+You use PATs exactly like passwords - instead of typing in your account password for git, you'll enter the PAT. You can also choose to cache the token forever, so you don't have to enter it in all the time. This token can also be used to access the Github API, but that isn't necessary for most people's usage.
+
+You can also switch to SSH based authentication, which works pretty similarly to access tokens, except they're tied to your machine and not transmitted anywhere. Still, PATs are easy to set up and use, and do have more flexible permissions than SSH keys.
+
+## Making a New Personal Access Token
+
+Setting up a PAT will require you to make a new one from Github's settings, and swap your local repositories over to using them. Head over to your personal account (select the Icon top right) and choose Settings to generate a new token. Once you are in Settings Scroll down to the bottom to "Developer Settings." Select "Personal Access Tokens," > "Tokens (classic)" and generate a new one:
+
+1. Generate new token (classic)
+2. You'll need to verify your actual account password.
+3. Give the token a name, ```ubuntu_server_tazama```
+4. select an expiration date ```90 days```. You probably want to change it from the default of 30 days, though Github will show a warning if you select "No Expiration." It's not terrible to have a permanent token, but you should likely be changing passwords and tokens at least every 6 months.
+5. A GitHub personal access token with write:packages and read:org permission
+
+Finally, you can choose which other scopes this token has. This allows you to allow or disallow certain actions. If you just want to use git from the command line with your repositories, you probably only care about the "repo" scope, which gives control over your repositories.
+
+You'll get a token like the following, that can be used in place of your password:
+
+```bash
+ghp_cgq4ZrHmFu0lLPl7ajKAwgMPnT5zhF00000
+```
+
+## Set the Environment Variable
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+  <TabItem value="ubuntu">
+    To set permanent environment variables for a single user, edit the .bashrc file:
+
+    ```bash
+    sudo nano ~/.bashrc
+    ```
+
+    Write a line for each variable you wish to add using the following syntax:
+      
+    ```bash
+    # Set environment variables
+    export GH_TOKEN=your-github-token
+
+    e.g.
+
+    export GH_TOKEN=ghp_cgq4ZrHmFu0lLPl7ajKAwgMPnT5zhF00000
+    ```
+
+    Write out the file ```ctrl``` + ```o```  
+    accept the name ```enter```  
+    exit ```ctrl``` + ```x```  
+
+    then reload your profile
+
+    ```bash
+    source ~/.bashrc
+    ```
+  </TabItem>
+  <TabItem value="windows">
+    Set the Environment Variable on your local machine:
+    
+    - Open your terminal or command prompt.
+    - Substitute ```your-github-token``` below with the token you copied.
+      - On Command Prompt - Run as Administrator:
+
+      ```powershell
+      setx GH_TOKEN your-github-token /m
+      ```
+      - On PowerShell:
+
+      ```powershell
+      $env:GH_TOKEN="your-github-token"
+      ```
+    You can check this is saved by closing your shell, and re-opening and running
+
+    ```
+    set
+    ```
+    This should now display your GH_TOKEN amongst the other environment variables
+  </TabItem>
+  <TabItem value="mac">
+        This is a banana 🍌
+  </TabItem>
+</Tabs>
+
+## Switching To Personal Access Tokens
+
+If your account password isn't cached, you can simply enter in the new token, and it should work. If your cache is stale though, you will need to reset it.
+
+On Windows, if you're using native Git (not through WSL), you will need to open up "Manage Windows Credentials" from Control Panel or the Start Menu, and edit or add the password to git: https://github.com.
+
+On macOS, it's accessible through the Keychain Access app. Search for "github.com," find the "internet password" entry for your Git account, and change the key.
+
+For Linux or WSL, you'll need to unset the cache, either locally (for a single repo), or globally:
+
+```git config --local --unset credential.helper```
+
+```git config --global --unset credential.helper```
+
+Then, you can push or pull from your repo normally, and it will have you enter the new PAT if it's not yet cached. You can cache this token for longer, either by editing the cache timeout in the credential helper:
+
+git config --global credential.helper "cache --timeout=86400"
+Or by configuring it to store the credentials permanently in ~/.github-credentials:
+
+git config credential.helper store
+Note that if you previously had this cache turned on, you may need to delete the line with the old cached credentials in the ~/.github-credentials file.
