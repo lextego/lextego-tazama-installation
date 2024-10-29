@@ -12,7 +12,7 @@ tags:
   - MachineSetup
 --- 
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 The following portions will help you install and configure a new, or reset pc.
 

@@ -13,7 +13,7 @@ tags:
   - Ubuntu
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 You will be asked to allow Docker Desktop to make changes to your device, accept this by selecting yes
 

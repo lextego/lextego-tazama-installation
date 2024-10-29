@@ -12,7 +12,7 @@ tags:
   - WIP
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 ## install_oh_my_posh
 

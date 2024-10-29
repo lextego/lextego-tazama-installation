@@ -13,7 +13,7 @@ tags:
   - training
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 This document will help you learn how to create a GitHub PR.
 

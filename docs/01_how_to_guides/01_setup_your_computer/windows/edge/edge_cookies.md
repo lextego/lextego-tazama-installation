@@ -13,7 +13,7 @@ tags:
   - Edge
 --- 
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 ## Cookies
 

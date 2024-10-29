@@ -13,7 +13,7 @@ tags:
   - Outlook
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 This approach has been tested on a Windows Machine - please feel free to correct for a Mac.
 

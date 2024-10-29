@@ -1,3 +1,5 @@
+//<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';

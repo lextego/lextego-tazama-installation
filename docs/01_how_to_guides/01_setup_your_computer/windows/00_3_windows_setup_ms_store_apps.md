@@ -12,7 +12,7 @@ tags:
   - Windows
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 There are a other apps that we use. The following document will help you get the relevant programs. Where we have specific configuration settings, there is a link to the relevant documentation.
 

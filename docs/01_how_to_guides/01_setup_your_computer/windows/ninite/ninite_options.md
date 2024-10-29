@@ -13,7 +13,7 @@ tags:
   - Windows
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 Ninite is a simple app to install Windows Apps - without ads and other settings. Making a deployment a lot faster.
 

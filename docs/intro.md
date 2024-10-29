@@ -11,6 +11,6 @@ tags:
   - getting_started
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 It is important that we all work in the same way, so that we can all understand each other. This document will help you understand how we work, and how you can contribute to the way we work.

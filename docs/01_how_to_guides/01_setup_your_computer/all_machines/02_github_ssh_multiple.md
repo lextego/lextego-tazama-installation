@@ -12,7 +12,7 @@ tags:
   - GitHub
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 After you have started working with GitHub, and have created a number of accounts, you realise the value of SSH - but this can get complicated fast. So you need to setup multiple accounts with SSH, and you also want to ensure that your email is not scraped from GitHub. These instructions aim to help you use SSH and profiles to manage this process.
 

@@ -12,7 +12,7 @@ tags:
   - Git
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 GitHub has a very flat folder structure, so everything comes under multiple repositories in one area. When we start working locally this becomes complicated, but we can simply create folders to contain similar repositories - like a project.
 

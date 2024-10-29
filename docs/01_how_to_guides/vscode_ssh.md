@@ -13,6 +13,6 @@ tags:
   - vscode
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 instructions [here](https://learn.microsoft.com/en-us/training/modules/develop-on-remote-machine/)

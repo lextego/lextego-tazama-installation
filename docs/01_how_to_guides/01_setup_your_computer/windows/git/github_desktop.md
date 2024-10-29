@@ -13,7 +13,7 @@ tags:
   - MachineSetup
 ---  
 
-<!-- GNU GENERAL PUBLIC LICENSE: Copyright © 2024 LexTego--> 
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
 
 We use GitHub Desktop to simplify the GitHub process for those who are learning Git.
 
