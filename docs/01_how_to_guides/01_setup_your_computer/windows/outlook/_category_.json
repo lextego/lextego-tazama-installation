@@ -1,0 +1,10 @@
+{
+    "position": 1,
+    "label": "Outlook",
+    "collapsible": true,
+    "collapsed": true,
+    "className": "green",
+    "link": {
+      "type": "generated-index"
+    }
+  }

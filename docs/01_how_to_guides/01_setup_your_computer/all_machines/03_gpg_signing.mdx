@@ -1,0 +1,251 @@
+---  
+sidebar_position: 1  
+sidebar_label: GPG Signing
+id: gpg-signing
+title: Sign Commits using GPG key
+date: 2024-10-23 09:48:50
+author: Rob Reeve
+description: overview of GPG 
+tags: 
+  - WIP
+  - GPG
+  - Git
+---  
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## What's GPG?  
+
+[GNU Privacy Guard](https://gnupg.org/) (GnuPG or GPG) allows you to create cryptographic asymmetric key pairs that can be used for the encryption and signing of data. They consist of a public and private key.
+
+You can share the public-key with anyone – you may upload this to your GitHub and GitLab accounts, or put it on the internet for anyone to access.
+
+## Install GPG Client Tool
+
+&#128161; For almost every OS
+
+ Please go to the [GNUPG download section](https://gnupg.org/download/index.html) and pick the related package for you operating system and isntall.
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+  <TabItem value="ubuntu">
+    Your distribution most likely already includes GPG. If not, then you can install it through your package manager.
+
+    **Debian / Ubuntu**
+    
+    ```bash
+    $ sudo apt install gnupg
+    ```
+
+    **Arch / Manjaro**
+    
+    ```bash
+    $ sudo pacman -S gnupg
+    ```
+  </TabItem>
+  <TabItem value="windows">
+    Install Gpg4win, more instructions [here](../windows/gpg4win/gpg4win.md).
+  </TabItem>
+  <TabItem value="mac">
+    ```
+    $ brew install gnupg
+    ```
+  </TabItem>
+</Tabs>
+
+## How to Sign Commits in Git
+
+If you already have a GPG key, you can skip this step. It's perfectly fine to reuse GPG keys. Just read below and verify that your key is compatible with Git and GitHub.
+
+You can get a list of your GPG keys with:
+
+```bash
+$ gpg --list-keys
+```
+
+you should get something similar to:
+
+```bash
+C:\Users\My_User>gpg --list-keys
+[keyboxd]
+---------
+pub   rsa4096 2024-03-14 [SC]
+      ########################################
+uid           [ultimate] My_User <number+account@users.noreply.github.com>
+sub   rsa4096 2024-03-14 [E]
+```
+
+First we need to generate an RSA key pair. The following will start an interactive script that will ask questions so we can provide the necessary information.
+
+```bash
+$ gpg --full-gen-key
+```
+
+1. For what ```kind of key ``` selection, input ```1``` which is "RSA and RSA".
+
+2. For ```key size```, input ```4096```. This is the minimum size for GitHub and GitLab, and the maximum size GPG will let us generate.
+
+3. For ```how long the key should be valid```, use whatever suits you. The default is ```0```, which means to never expire, set ```90``` for 90 days. Verify the information is correct by inputting ```y```.
+
+4. GPG will ask for personal information which is stored in your key.
+   1. Your name, this can be anything at least 5 characters in length.
+   2. Your email address, use an email you plan to commit with. You must've verified this email on the remote account you'll push with.
+   3. A comment, you can type whatever, or press enter to leave it blank.
+   4. Verify the information is correct by inputting ```o```.
+
+```bash
+   root@799d1cc3c99c:/# gpg --full-gen-key
+gpg (GnuPG) 2.2.19; Copyright (C) 2019 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Please select what kind of key you want:
+   (1) RSA and RSA (default)
+   (2) DSA and Elgamal
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+  (14) Existing key from card
+Your selection? 1
+RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (3072) 4096
+Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      <n>  = key expires in n days
+      <n>w = key expires in n weeks
+      <n>m = key expires in n months
+      <n>y = key expires in n years
+Key is valid for? (0) 90
+Key expires at 01/21/24 12:16:05 GMT Standard Time
+Is this correct? (y/N) y
+
+GnuPG needs to construct a user ID to identify your key.
+
+Real name: My_Name
+Email address: My_User@My_Domain.com
+Comment: 
+You selected this USER-ID:
+    "My_User <My_User@My_Domain.com>"
+
+Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit? o
+```
+
+:::info
+
+If you hide your email address, remember to use the hidden email to sign
+
+:::
+
+GPG will ask for a passphrase to protect the key. You can set this to anything, or leave it blank for no passphrase at all. Of course, it's ideal to use a good passphrase, rely on your password manager if you use one.
+
+### How to Export Your Keys
+
+Next you need to get the identifier of the newly generated key so we can refer to it when exporting your key and configuring Git.
+
+GPG keys can be referred to in multiple ways. It's a good a habit to use and share the full fingerprint, to minimize the risk of ambiguity when users request it from a key server. Long (64-bit) IDs are fine for now, but short (32-bit) IDs are best avoided, as it's easy to produce a collision. ([More Info](https://evil32.com/))  
+
+We'll be using the full GPG fingerprint, which we can get with the command:
+
+```bash
+gpg --list-keys
+```
+
+You'll get output like the following:
+
+```bash
+pub   rsa4096 2021-05-23 [SC]
+      C6656513A0F9B7B7F4E76389EF39187D04795745
+uid           [ultimate] My_User <My_User@My_Domain.com>
+sub   rsa4096 2021-05-23 [E]
+```
+
+For this example, it's ```C6656513A0F9B7B7F4E76389EF39187D04795745```. Make sure to use your fingerprint instead of this when you do the rest of the commands.
+
+You need to export the public-key so you can upload it to GitHub. We use the ```--armor``` argument to indicate that we want to export it in an [ASCII armored](https://en.wikipedia.org/wiki/Binary-to-text_encoding) format instead of binary. This writes the public-key to a file named ```gpg-key.pub```.
+
+```bash
+gpg --export --armor C6656513A0F9B7B7F4E76389EF39187D04795745 > ./gpg-key.pub
+```
+
+:::info
+
+change the ```> ./gpg-key.pub``` to the correct path to where you want the file - changing the ```/``` for a ```\``` in Windows :-)
+
+In Windows, you might also need to set the path to gpg with ```git config --global gpg.program "c:\Program Files (x86)\GnuPG\bin\gpg.exe"```
+
+:::
+
+### How to Enable Commit Signing
+
+Then to enable signing all commits, set the commit.gpgsign setting using  git config. This will make git commit sign commits by default.
+
+```bash
+git config --global commit.gpgsign true
+```
+
+If you have multiple GPG keys, or just for future reference, you may want to set user.signingkey as well. This will indicate specifically which key Git should use for signing to avoid ambiguity.
+
+```bash
+git config --global user.signingkey C6656513A0F9B7B7F4E76389EF39187D04795745
+```
+
+&#128161; For Linux Users if you don’t want to enter your GPG pass every single time. Follow this:
+Add the GPG key to your ```.zshrc``` file, if it exists, or your ```.zprofile``` file:
+
+```zsh
+if [ -r ~/.zshrc ]; then echo 'export GPG_TTY=$(tty)' >> ~/.zshrc; \
+  else echo 'export GPG_TTY=$(tty)' >> ~/.zprofile; fi
+```
+
+Alternatively, if you use the bash shell, run this command:
+
+```bash
+if [ -r ~/.bash_profile ]; then echo 'export GPG_TTY=$(tty)' >> ~/.bash_profile; \
+  else echo 'export GPG_TTY=$(tty)' >> ~/.profile; fi
+```
+
+Now, whenever you commit your code with
+
+```bash
+git commit -m "commit message example"
+```
+
+### How to Use your Key
+
+Finally, you have to upload your public key. You can use the same GPG key for both GitHub and GitLab, or any other Git provider.
+
+We'll need the exported public-key for the following steps, so open the gpg-key.pub file in any editor like Visual Studio Code, and copy the contents to your clipboard.
+
+On GitHub, you can go to your [settings](https://github.com/settings/profile), under "[SSH and GPG keys](https://github.com/settings/keys)", then click "[New GPG key](https://github.com/settings/gpg/new)". Paste the contents of gpg-key.pub into the Key field on GitHub, and click "Add GPG key".
+![(JPEG Image, 2986 × 1578 pixels) – Scaled (67%)](https://user-images.githubusercontent.com/79305018/166648574-ca6f71ce-bdf4-44a5-bfa1-732b7a70f9a6.jpg)
+
+### How to Verify Commits in Git
+
+GitHub will show a "Verified" badge next to your new commits.
+
+
+![(JPEG Image, 2484 × 278 pixels) – Scaled (81%)](https://user-images.githubusercontent.com/79305018/166648629-7807bd6a-b090-4d90-992d-e19c971481e4.jpg)
+
+The final thing to remember is that commit signing will only verify the committer, not the author. That means when you see a verified commit, the author has nothing to do with the verified status.
+
+### Vigilant Mode
+
+Please enable vigilant mode to see all unsigned commits to explicitly say "Unverified". This can be enabled in your [settings](https://github.com/settings/profile), under "[SSH and GPG keys](https://github.com/settings/keys)", then tick "Flag unsigned commits as unverified".
+
+![(JPEG Image, 2470 × 1620 pixels) – Scaled (80%)](https://user-images.githubusercontent.com/79305018/166648720-f13d7fc3-7d14-46bd-b738-13c76a88d39b.jpg)
+![image](https://user-images.githubusercontent.com/79305018/166648925-6c998ffc-40f3-4262-9b02-bb186d3f4c49.jpg)
+
+That’s all. I hope you enjoyed while following the steps. Let me know if you stuck in one of them. 
+
+### References
+
+[https://www.freecodecamp.org/news/what-is-commit-signing-in-git/](https://www.freecodecamp.org/news/what-is-commit-signing-in-git/)
+[https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key)
+
+(c) LexTego - [CC-BY-SA-4.0 ](https://spdx.org/licenses/CC-BY-SA-4.0.html)

@@ -1,0 +1,532 @@
+---  
+sidebar_position: 1  
+sidebar_label: Tazama Docker Deployment 1
+id: tazama-docker-deployment-1
+title: Full Stack Tazama Docker Deployment Part 1
+date: 2024-09-09 09:36:04
+author: Rob Reeve
+description: How to deploy a full stack Tazama instance
+tags: 
+  - WIP
+  - HowTo
+  - Docker
+  - Tazama
+  - Deployment
+--- 
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Introduction
+
+These instructions are an adaptation of the original Tazama Instructions that are [located here](https://github.com/tazama-lf/docs/blob/dev/Guides/full-service-full-stack-docker-tazama.md). They have been modified to work on Ubuntu as well as Windows, we will add Mac instructions when possible.
+
+This guide will take you through the steps to deploy Tazama in a Docker container on a machine via Docker Compose.
+
+It is assumed you know how to use Docker Compose and modify the various files that support a docker deployment.
+
+:::warning
+
+It is anticipated that you understand script files, and know that running an unvalidated script is very risky. Please ensure you are comfortable with all the steps the script is completing, before starting. We do not accept any liability for any issues you might encounter running these exercises.
+
+:::
+
+### Background
+
+Tazama is composed of a number of third party and custom-built open source components. While all our Tazama components are also open source software, the rules that we have built to detect fraud and money laundering behaviour are hidden from public (and nefarious) view in private repositories on GitHub. Access to these files is free, but you need to register with the Tazama team to gain access to them.
+
+The guide in the [Full-Stack-Docker-Tazama repository](https://github.com/tazama-lf/Full-Stack-Docker-Tazama) will show you how to install the system using only the publicly available open source software components. This guide will show you how to install everything, including the hidden, private rules, if you have access to them.
+
+For the guidelines we have expanded to include Ubuntu and in the future Apple Operating systems
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        This section is for Ubuntu Server - assumption you have deployed a native version of Ubuntu on a remote machine. If you are running a WSL version, then please follow the Windows Commands
+    </TabItem>
+    <TabItem value="windows">
+        This is for Windows - using a combination of the Windows Subsystem for Linux, Powershell and Command Prompts
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple: (well - actually it is placeholder, we have yet to deploy on a mac)
+    </TabItem>
+</Tabs>
+
+## Pre-requisites:
+
+Set up your development environment as recommended in the [Tazama Contribution Guide](https://github.com/tazama-lf/.github/blob/main/CONTRIBUTING.md#32-setting-up-the-development-environment) section 3.2.1.
+
+The pre-requisites that are essential to be able to follow this guide are:
+- Docker
+- Node
+- Git
+- Newman/Postman
+- A code editor (this guide will assume you are using VS Code)
+- Member access to the Tazama GitHub Organization
+- A GitHub personal access token with `write:packages` and `read:org` permissions
+  - Ensure that your GitHub Personal Access Token is added as an Environment Variable called "`GH_TOKEN`".
+
+The instructions for each operating system are available below. If you have not installed these yet, please do so.
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        This has been put into [Machine Setup > Dependencies](../../01_setup_your_computer/ubuntu/01_server_setup/01_dependencies.md#tazama-core) and [GH_Access_token](../../01_setup_your_computer/all_machines/01_GH_access_token.mdx)
+    </TabItem>
+    <TabItem value="windows">
+        Instructions as follows
+         - [Git](../../01_setup_your_computer/windows/git/git_windows.md) [x]
+         - [GitHub Desktop](../../01_setup_your_computer/windows/git/github_desktop.md) [x]
+         - [NodeJS](../../01_setup_your_computer/windows/node/nodejs.md) 
+         - [Postman/Newman](../../01_setup_your_computer/windows/postman/postman.md)
+         - [Docker](../../01_setup_your_computer/windows/docker/docker.md)
+         - [GH_Access token](../../01_setup_your_computer/all_machines/01_GH_access_token.mdx) [x]
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple: (well - actually it is placeholder, we have yet to deploy on a mac)
+    </TabItem>
+</Tabs>
+
+## Installation steps
+
+### Clone the Full-Stack-Docker-Tazama Repository to Your Local Machine
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+      We deploy all code in to a folder called code - off our home folder this is ```~/code``` in linux. We create a subfolder called tazama, and move to it. Note in WSL, the disk access is optimised if run from the home directory, rather than the Windows disks.
+
+      ```bash
+      mkdir ~/code
+      mkdir ~/code/tazama
+      cd ~/code/tazama
+      ```
+    </TabItem>
+    <TabItem value="windows">
+        We deploy all code in to a folder called tazama - off a folder in root called _GitHub. We create a subfolder called tazama, and move to it.
+
+        ```command
+        md \_GitHub
+        md \_GitHub\tazama
+        cd \_GitHub\tazama
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple: (well - actually it is placeholder, we have yet to deploy on a mac)
+    </TabItem>
+</Tabs>
+
+clone the repo into this folder
+
+```bash
+git clone https://github.com/tazama-lf/Full-Stack-Docker-Tazama -b main
+```
+
+We get the following output (as more code is added, more items will be included, so expect the details to change)
+
+```bash
+Cloning into 'Full-Stack-Docker-Tazama'...
+remote: Enumerating objects: 514, done.
+remote: Counting objects: 100% (92/92), done.
+remote: Compressing objects: 100% (73/73), done.
+remote: Total 514 (delta 28), reused 36 (delta 17), pack-reused 422 (from 1)
+Receiving objects: 100% (514/514), 1.59 MiB | 36.17 MiB/s, done.
+Resolving deltas: 100% (264/264), done.
+```
+
+We know we will need files from Docs too, so we clone that while we are here, we will copy things, rather than having to try to download as we go
+
+```bash
+git clone https://github.com/tazama-lf/docs -b main
+```
+
+We should see something similar to the following:
+
+```bash
+Cloning into 'docs'...
+remote: Enumerating objects: 2329, done.
+remote: Counting objects: 100% (741/741), done.
+remote: Compressing objects: 100% (398/398), done.
+remote: Total 2329 (delta 440), reused 529 (delta 342), pack-reused 1588 (from 1)
+Receiving objects: 100% (2329/2329), 39.88 MiB | 12.67 MiB/s, done.
+Resolving deltas: 100% (1106/1106), done.
+```
+
+## update the config files
+
+Docker uses a number of config files, that we will modify to make the service work. Modifying in Ubuntu is with nano - but you could set up an SSH code session (it can be quicker)
+
+### .env
+
+First, we want to create the basic environment variables to guide the Docker Compose installation.
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        In nano, open the .env file in the Full-Stack-Docker-Tazama folder and update the `.env` file as follows
+
+        ```bash
+        cd ~/code/tazama/Full-Stack-Docker-Tazama
+        nano .env
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        In code, open the .env file in the Full-Stack-Docker-Tazama folder and update the `.env` file as follows
+
+        ```
+        cd \_GitHub\tazama\Full-Stack-Docker-Tazama
+        code .
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+- (Optional) If your GitHub Personal Access Token had not been added as a Variable, you would need to specify the token at the top of the file next to the GH_TOKEN key. If you had specified the GH_TOKEN as an environment variable, you can leave the `${GH_TOKEN}` shell variable in place to retrieve it automatically.
+- (Optional) If you prefer an alternative port for the Transaction Monitoring Service API, you can update the `TMS_PORT` environment variable.
+
+The current unaltered `.env` file will look as follows:
+
+```javascript
+# Authentication
+GH_TOKEN=${GH_TOKEN}
+
+# Branches
+TMS_BRANCH=main
+ED_BRANCH=main
+TP_BRANCH=main
+TADP_BRANCH=main
+RULE_901_BRANCH=main
+
+# Ports
+TMS_PORT=5000
+
+# TLS
+NODE_TLS_REJECT_UNAUTHORIZED='0'
+```
+
+The altered `.env` file will look as follows:
+
+```javascript
+# Authentication
+GH_TOKEN=ghp_my_key
+
+# Branches
+TMS_BRANCH=main
+ED_BRANCH=main
+TP_BRANCH=main
+TADP_BRANCH=main
+RULE_901_BRANCH=main
+
+# Ports
+TMS_PORT=my_port
+
+# TLS
+NODE_TLS_REJECT_UNAUTHORIZED='0'
+```
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        - write the file with ```ctrl``` + ```o```
+        - accepting to leave the file name as ```.env```,
+        - then exit with ```ctrl``` + ```x```
+    </TabItem>
+    <TabItem value="windows">
+        Close .env and save the changes
+    </TabItem>
+    <TabItem value="mac">
+        This is still an apple :apple:
+    </TabItem>
+</Tabs>
+
+### rule*.env
+
+Although we have instructions from Tazama, we will not follow them precisely at this stage as the rule.env does not exist, but please read them to understand what will happen to all the files. We will use the batch deployment later in the process.
+
+:::warning
+
+As there is no rule.env - we can review the files when we extract the zip file. If you want to please jump to [multiple env](01_tazama.mdx#multiple-env)  
+
+:::
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+      ```
+      cd ~/code/tazama/Full-Stack-Docker-Tazama/env
+      ```
+    </TabItem>
+    <TabItem value="windows">
+      ```
+      cd \_GitHub\tazama\Full-Stack-Docker-Tazama\env
+      ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an applie :apple:
+    </TabItem>
+</Tabs>
+
+Using the `rule001.env` file as a template, we want to create a separate ruleXYZ.env (where XYZ is the number of the rule) file for each private rule processor. Navigate to the `Full-Stack-Docker-Tazama/env` folder and open the `rule001.env` file. In each separate `ruleXYZ.env` file, update the following environment variables to match the rule number, and then save the file with that rule number in the filename:
+
+```javascript
+FUNCTION_NAME="rule-XYZ-rel-1-0-0"
+RULE_NAME="XYZ"
+```
+
+:::note
+
+You can ignore the `PRODUCER_STREAM` and `CONSUMER_STREAM` environment variables further down.
+
+:::
+
+Filename: `ruleXYZ.env`
+
+### Multiple env
+
+Setting up individual `ruleXYZ.env` files is rather tedious and instead you can copy the `ruleXYZ.env` files from the following location into the `Full-Stack-Docker-Tazama/env` to save some time:
+
+[https://github.com/tazama-lf/docs/blob/main/files/full-stack-docker-tazama/rulexxx.zip](https://github.com/tazama-lf/docs/blob/main/files/full-stack-docker-tazama/rulexxx.zip)
+
+Download the rulexxx.zip file and then unzip the contents into your local `Full-Stack-Docker-Tazama/env` folder.
+
+As we cloned the above repo earlier and installed unzip as part of our dependencies, we just need to run the following
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        unzip ~/code/tazama/docs/files/full-stack-docker-tazama/rulexxx.zip -d ~/code/tazama/Full-Stack-Docker-Tazama/env
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama\Full-Stack-Docker-Tazama\env
+        xcopy \_GitHub\tazama\docs\files\full-stack-docker-tazama\rulexxx.zip
+        tar -xf rulexxx.zip
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an ... :apple:
+    </TabItem>
+</Tabs>
+
+### docker-compose.yaml
+
+We now want to update the `docker-compose.yaml` file to add support for each private rule processor, so they have their own set of configuration parameters. Again we will do this en masse, so just follow these instructions to understand what is happening. In VS Code, open the `docker-compose.yaml` file located in the `Full-Stack-Docker-Tazama` folder. Find the `# Rule 901` section in the file. 
+
+
+:::note
+
+The context below is set for a Windows computer
+
+:::
+
+```yaml
+  # RULE 901
+  rule-901:
+    build:
+      context: https://github.com/frmscoe/rule-executer.git#${RULE_EXECUTER_BRANCH}
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/rule-executer.env
+      - .env
+    restart: always
+    depends_on:
+      - redis
+      - arango
+```
+
+For each private rule processor, create a copy of the `# Rule 901` environment variable block and replace the references to rule 901 with the intended rule number, e.g. for a rule 999, three replacements are made as follows
+
+```yaml
+# RULE 999
+rule-999:
+    context: ..\rule-999
+```
+
+
+So this will look like the following in different operating systems
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```yaml
+          # Rule 999
+          rule-999:
+            build:
+              context: ../rule-executer-999
+              args:
+                - GH_TOKEN
+            env_file:
+              - env/rule.env
+              - .env
+            restart: always
+            depends_on:
+              - redis
+              - arango
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```yaml
+          # Rule 999
+          rule-999:
+            build:
+              context: ..\rule-executer-999
+              args:
+                - GH_TOKEN
+            env_file:
+              - env/rule.env
+              - .env
+            restart: always
+            depends_on:
+              - redis
+              - arango
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple:
+    </TabItem>
+</Tabs>
+
+Once again, copy-pasting and string-replacing can be rather tedious, and you are welcome to just download this prepared `docker-compose.yaml` file into your `Full-Stack-Docker-Tazama` folder [from Github](https://github.com/tazama-lf/docs/blob/main/files/full-stack-docker-tazama/docker-compose.yaml)
+
+As we cloned docs, we can just run the following commands
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cp ~/code/tazama/docs/files/full-stack-docker-tazama/docker-compose.yaml ~/code/tazama/Full-Stack-Docker-Tazama/docker-compose.yaml
+        ```
+
+        :::warning
+
+        remember to change all the context folders to `/` and not `\`
+
+        in VS Code, I select all the values for ```..\rule``` and replace it with ```../rule```
+
+        :::
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        xcopy /y \_GitHub\tazama\docs\files\full-stack-docker-tazama\docker-compose.yaml \_GitHub\tazama\Full-Stack-Docker-Tazama\docker-compose.yaml
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+We have finished the first part, so we can continue with the setup.
+
+## Deploy the Core Services
+
+Tazama Core Services provide the foundational infrastructure components for the system and includes the ArangoDB, NATS and redis services: ArangoDB provides the database infrastructure, NATS provides the pub/sub functionality and redis provides for fast in-memory processor data caching.
+
+We deploy these services first and separately so that we can access the database to configure Tazama before continuing with the rest of the installation tasks.
+
+First, start the Docker Desktop for Windows application.
+
+With Docker Desktop running: from your Windows Command Prompt and from inside the `Full-Stack-Docker-Tazama` folder, execute the following command:
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+        ```bash
+        cd ~/code/tazama/Full-Stack-Docker-Tazama
+        docker compose up -d arango redis nats
+        ```
+    </TabItem>
+    <TabItem value="windows">
+        ```
+        cd \_GitHub\tazama\Full-Stack-Docker-Tazama
+        docker compose up -d arango redis nats
+        ```
+    </TabItem>
+    <TabItem value="mac">
+        This is a banana 🍌
+    </TabItem>
+</Tabs>
+
+Once deployed, your containers should be running
+
+```bash
+docker compose up -d arango redis nats
+[+] Running 3/0
+ ✔ Container full-stack-docker-tazama-nats-1    Running          0.0s
+ ✔ Container full-stack-docker-tazama-redis-1   Running          0.0s
+ ✔ Container full-stack-docker-tazama-arango-1  Running          0.0s
+```
+
+You'll be able to access the web interfaces for the deployed components through their respective TCP/IP ports on your local machine as defined in the docker-compose.yaml file.
+
+## Local Host
+
+- [ArangoDB - 18529](http://localhost:18529)
+- [NATS - 18222](http://localhost:18222)
+
+## Remote Host
+
+- [ArangoDB - 18529](http://192.168.50.26:18529)
+- [NATS - 18222](http://192.168.50.26:18222)
+
+:::warning
+
+We have issues in the next steps, where the tazama containers load as unhealthy. We have a quick workaround for now
+
+:::
+
+(c) LexTego - [CC-BY-SA-4.0 ](https://spdx.org/licenses/CC-BY-SA-4.0.html)

@@ -1,0 +1,10 @@
+{
+  "position": 1,
+  "label": "Application Deployment",
+  "collapsible": true,
+  "collapsed": true,
+  "className": "blue",
+  "link": {
+    "type": "generated-index"
+  }
+}

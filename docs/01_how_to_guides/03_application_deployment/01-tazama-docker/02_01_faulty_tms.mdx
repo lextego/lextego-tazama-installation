@@ -1,0 +1,308 @@
+---  
+sidebar_position: 1  
+sidebar_label: Unhealthy Docker containers
+id: faulty-container
+title: Faulty Docker Container - unhealthy
+date: 2024-09-13 08:53:30
+author: Rob Reeve
+description: The original docker containers are failing - documented fix
+tags: 
+  - WIP
+  - Docker
+  - Tazama
+---  
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+As the Tazama deployment has a Healthcheck running in the Dockerfile, all the containers declare themselves faulty - because the Linux Distro used does not create a shell environment,
+
+we are going to deploy just that for now. Note we are going to be experimenting, so this document will be changing as we progress. The instructions are for Linux.
+
+The ```tms.env``` settings remain as documented
+
+we clone the repos
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+      ```bash
+      cd ~/code/tazama
+      git clone https://github.com/frmscoe/tms-service -b main
+      git clone https://github.com/frmscoe/event-director -b main
+      git clone https://github.com/frmscoe/typology-processor.git -b main
+      git clone https://github.com/frmscoe/transaction-aggregation-decisioning-processor -b main
+      git clone https://github.com/tazama-lf/rule-executer -b main
+      ```
+    </TabItem>
+    <TabItem value="windows">
+      ```bash
+      cd \_Github\tazama
+      git clone https://github.com/frmscoe/tms-service -b main
+      git clone https://github.com/frmscoe/event-director -b main
+      git clone https://github.com/frmscoe/typology-processor.git -b main
+      git clone https://github.com/frmscoe/transaction-aggregation-decisioning-processor -b main
+      git clone https://github.com/tazama-lf/rule-executer -b main
+      ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple: (well - actually it is placeholder, we have yet to deploy on a mac)
+    </TabItem>
+</Tabs>
+
+
+We need to modify the Full-Stack-Docker-Tazama/docker-compose.yaml to use the local files. Note most of the files already have the folder name in the git line, so it is a quick edit.
+
+<Tabs
+  defaultValue="ubuntu"
+  values={[
+    {label: 'Ubuntu', value: 'ubuntu'},
+    {label: 'Windows', value: 'windows'},
+    {label: 'Mac', value: 'mac'},
+  ]}>
+    <TabItem value="ubuntu">
+      ```yaml
+        # TMS
+        tms:
+          build:
+            context: ../tms-service
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tms.env
+            - .env
+          restart: always
+          ports:
+            - ${TMS_PORT}:3000
+          depends_on:
+            - redis
+            - arango
+            - nats
+        
+        # EVENT DIRECTOR
+        ed:
+          build:
+            context: ../event-director
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/ed.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+
+        # TYPOLOGY PROCESSOR
+        tp:
+          build:
+            context: ../typology-processor
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tp.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+
+        # TADP
+        tadp:
+          build:
+            context: ../transaction-aggregation-decisioning-processor
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tadp.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+      ```
+    </TabItem>
+    <TabItem value="windows">
+      ```yaml
+        # TMS
+        tms:
+          build:
+            context: ..\tms-service
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tms.env
+            - .env
+          restart: always
+          ports:
+            - ${TMS_PORT}:3000
+          depends_on:
+            - redis
+            - arango
+            - nats
+        
+        # EVENT DIRECTOR
+        ed:
+          build:
+            context: ..\event-director
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/ed.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+
+        # TYPOLOGY PROCESSOR
+        tp:
+          build:
+            context: ..\typology-processor
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tp.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+
+        # TADP
+        tadp:
+          build:
+            context: ..\transaction-aggregation-decisioning-processor
+            args:
+              - GH_TOKEN
+          env_file:
+            - env/tadp.env
+            - .env
+          restart: always
+          depends_on:
+            - redis
+            - arango
+            - nats
+      ```
+    </TabItem>
+    <TabItem value="mac">
+        This is an apple :apple: (well - actually it is placeholder, we have yet to deploy on a mac)
+    </TabItem>
+</Tabs>
+```yaml
+  # TMS
+  tms:
+    build:
+      context: ../tms-service
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/tms.env
+      - .env
+    restart: always
+    ports:
+      - ${TMS_PORT}:3000
+    depends_on:
+      - redis
+      - arango
+      - nats
+  
+  # EVENT DIRECTOR
+  ed:
+    build:
+      context: ../event-director
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/ed.env
+      - .env
+    restart: always
+    depends_on:
+      - redis
+      - arango
+      - nats
+
+  # TYPOLOGY PROCESSOR
+  tp:
+    build:
+      context: ../typology-processor
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/tp.env
+      - .env
+    restart: always
+    depends_on:
+      - redis
+      - arango
+      - nats
+
+  # TADP
+  tadp:
+    build:
+      context: ../transaction-aggregation-decisioning-processor
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/tadp.env
+      - .env
+    restart: always
+    depends_on:
+      - redis
+      - arango
+      - nats
+```
+
+Now we can update the Dockerfile in each repo
+
+Event Director
+
+../event-director
+
+```bash
+# HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
+```
+
+Rule Executer
+
+../rule-executer
+
+```bash
+# HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
+```
+
+TMS Service
+
+../tms-service
+
+```bash
+# HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
+```
+
+Transaction Aggregation and Decisioning Processor (TADP)
+
+../transaction-aggregation-decisioning-processor
+
+```bash
+# HEALTHCHECK --interval=3s CMD [ -e /tmp/.lock ] || exit 1
+```
+
+Typology Processor
+
+../typology-processor
+
+```bash
+# HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
+```
+
+(c) LexTego - [CC-BY-SA-4.0 ](https://spdx.org/licenses/CC-BY-SA-4.0.html)
