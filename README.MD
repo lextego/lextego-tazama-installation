@@ -7,8 +7,8 @@ This is a docusaurus installation that allows you to quickly and easily browse t
 ## Dependencies
 
 - NodeJS
-  - [Windows instructions](../docs/01_how_to_guides/01_setup_your_computer/windows/node/nodejs.md)
-  - [Ubuntu Instructions](../docs/01_how_to_guides/01_setup_your_computer/ubuntu/01_server_setup/01_dependencies.md)
+  - [Windows instructions](./docs/01_how_to_guides/01_setup_your_computer/windows/node/nodejs.md)
+  - [Ubuntu Instructions](./docs/01_how_to_guides/01_setup_your_computer/ubuntu/01_server_setup/01_dependencies.md)
 - Node Package Manager
 
 Once you have installed Node, you are ready to launch the documentation server
